@@ -1,5 +1,7 @@
 from django import forms
 from .models import Vehicle
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
 class VehicleForm(forms.ModelForm):
     class Meta:
@@ -18,4 +20,5 @@ class VehicleForm(forms.ModelForm):
             'kilometraje': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 45000'}),
             'motor': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 1.6L'}),
         }
-    
+
+

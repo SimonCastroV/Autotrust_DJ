@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="col-md-4 auth-container">
+    <h2>Iniciar Sesión</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-danger w-100 mt-2">Entrar</button>
+    </form>
+    <p class="text-center mt-3">
+      ¿No tienes cuenta?
+      <a href="{% url 'register' %}">Regístrate</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
