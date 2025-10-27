@@ -1,0 +1,82 @@
+/* === Fondo general === */
+body {
+  background-color: #f3f3f3 !important;
+  font-family: 'Poppins', sans-serif;
+  color: #111;
+}
+
+/* === Contenedor principal === */
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+/* === Caja del formulario === */
+.auth-card {
+  background: linear-gradient(180deg, #2b2b2b, #1a1a1a);
+  padding: 2.5rem;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+  width: 100%;
+  max-width: 420px;
+  color: #fff;
+}
+
+/* === Título === */
+.auth-card h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #c20000;
+  font-weight: 700;
+}
+
+/* === Inputs === */
+.auth-card input {
+  background-color: #333;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.auth-card input:focus {
+  outline: none;
+  box-shadow: 0 0 5px #c20000;
+}
+
+/* === Botón principal === */
+.auth-card button {
+  background-color: #c20000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 10px;
+  width: 100%;
+  transition: 0.3s;
+}
+
+.auth-card button:hover {
+  background-color: #a00000;
+  transform: scale(1.02);
+}
+
+/* === Enlaces === */
+.auth-card a {
+  color: #ff4444;
+  text-decoration: none;
+}
+
+.auth-card a:hover {
+  text-decoration: underline;
+}
+
+.auth-card p {
+  text-align: center;
+  margin-top: 1rem;
+  color: #ccc;
+}
