@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Autos en Venta{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-danger fw-bold">Autos en Venta</h1>
+        <a href="{% url 'upload_vehicle' %}" class="btn btn-danger fw-bold">
+            <i class="bi bi-plus-circle"></i> Agregar Carro
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for vehicle in vehicles %}
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 vehicle-card" data-bs-toggle="modal" data-bs-target="#vehicleModal{{ vehicle.id }}">
+                
+                {# Mostrar la primera imagen del vehículo como portada #}
+                {% if vehicle.imagenes.exists %}
+                    <img src="{{ vehicle.imagenes.first.imagen.url }}" class="card-img-top" alt="{{ vehicle.marca }} {{ vehicle.modelo }}">
+                {% elif vehicle.imagen %}
+                    <img src="{{ vehicle.imagen.url }}" class="card-img-top" alt="{{ vehicle.marca }} {{ vehicle.modelo }}">
+                {% else %}
+                    <img src="https://via.placeholder.com/400x250.png?text=Sin+Imagen" class="card-img-top" alt="Sin imagen">
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title text-capitalize">{{ vehicle.marca }} {{ vehicle.modelo }}</h5>
+                    <p><strong>Año:</strong> {{ vehicle.anio }}</p>
+                    <p class="text-danger fw-bold">${{ vehicle.precio|intcomma }}</p>
+                    <p>{{ vehicle.descripcion|truncatewords:10 }}</p>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <button class="btn btn-pagar w-50 me-2">
+                            <i class="bi bi-credit-card"></i> Pagar
+                        </button>
+                        <button class="btn btn-chat w-50">
+                            <i class="bi bi-chat"></i> Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL -->
+        <div class="modal fade" id="vehicleModal{{ vehicle.id }}" tabindex="-1" aria-labelledby="vehicleModalLabel{{ vehicle.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="vehicleModalLabel{{ vehicle.id }}">
+                            {{ vehicle.marca }} {{ vehicle.modelo }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body bg-white">
+                        <div class="row g-4">
+                            <div class="col-md-7">
+                                <!-- Carrusel de imágenes -->
+                                {% if vehicle.imagenes.exists %}
+                                <div id="carousel{{ vehicle.id }}" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-inner">
+                                        {% for img in vehicle.imagenes.all %}
+                                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                            <img src="{{ img.imagen.url }}" class="d-block w-100 rounded" alt="Foto de {{ vehicle.marca }}">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel{{ vehicle.id }}" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon"></span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#carousel{{ vehicle.id }}" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon"></span>
+                                    </button>
+                                </div>
+                                {% elif vehicle.imagen %}
+                                    <img src="{{ vehicle.imagen.url }}" class="img-fluid rounded" alt="{{ vehicle.marca }}">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/600x400.png?text=Sin+Imagen" class="img-fluid rounded" alt="Sin imagen">
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-5">
+                                <ul class="list-unstyled fs-6 mb-3">
+                                    <li><strong>Marca:</strong> {{ vehicle.marca }}</li>
+                                    <li><strong>Modelo:</strong> {{ vehicle.modelo }}</li>
+                                    <li><strong>Año:</strong> {{ vehicle.anio }}</li>
+                                    <li><strong class="text-danger">Precio:</strong> ${{ vehicle.precio|intcomma }}</li>
+                                    <li><strong>Ubicación:</strong> {{ vehicle.ubicacion }}</li>
+                                    <li><strong>Kilometraje:</strong> {{ vehicle.kilometraje }} km</li>
+                                    <li><strong>Motor:</strong> {{ vehicle.motor }}</li>
+                                </ul>
+                                <hr>
+                                <p><strong>Descripción:</strong><br>{{ vehicle.descripcion }}</p>
+
+                                <div class="text-muted small mt-3">
+                                    <p class="mb-0">Publicado: {{ vehicle.fecha_publicacion|date:"d/m/Y H:i" }}</p>
+                                    <p>Actualizado: {{ vehicle.updated_at|date:"d/m/Y H:i" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light d-flex justify-content-end">
+                        <button class="btn btn-danger px-4">
+                            <i class="bi bi-credit-card"></i> Pagar
+                        </button>
+                        <button class="btn btn-chat px-4 ms-2">
+                            <i class="bi bi-chat"></i> Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

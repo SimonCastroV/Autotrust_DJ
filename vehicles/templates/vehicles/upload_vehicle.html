@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agregar Vehículo{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-lg border-0 mx-auto" style="max-width: 700px;">
+    <div class="card-header bg-danger text-white text-center">
+      <h4 class="mb-0">Agregar Nuevo Vehículo</h4>
+    </div>
+
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Campos del formulario -->
+        <div class="mb-3">
+          <label for="id_marca" class="form-label fw-bold">Marca:</label>
+          {{ form.marca }}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_modelo" class="form-label fw-bold">Modelo:</label>
+          {{ form.modelo }}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_anio" class="form-label fw-bold">Año:</label>
+          {{ form.anio }}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_descripcion" class="form-label fw-bold">Descripción:</label>
+          {{ form.descripcion }}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_precio" class="form-label fw-bold">Precio:</label>
+          {{ form.precio }}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_ubicacion" class="form-label fw-bold">Ubicación:</label>
+          {{ form.ubicacion }}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_kilometraje" class="form-label fw-bold">Kilometraje:</label>
+          {{ form.kilometraje }}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_motor" class="form-label fw-bold">Motor:</label>
+          {{ form.motor }}
+        </div>
+
+        <!-- 🔹 Campo de imágenes múltiples -->
+        <div class="mb-3">
+          <label for="imagenes" class="form-label fw-bold">Imágenes del vehículo:</label>
+          <input type="file" name="imagenes" id="imagenes" class="form-control" multiple>
+          <div class="form-text text-muted">Puedes seleccionar varias imágenes a la vez.</div>
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{% url 'vehicle_list' %}" class="btn btn-secondary">
+            ⬅ Volver
+          </a>
+          <button type="submit" class="btn btn-danger">
+             Publicar Vehículo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
