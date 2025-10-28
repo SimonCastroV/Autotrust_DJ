@@ -5,6 +5,7 @@ from .forms import RegisterForm
 from django.contrib.auth.decorators import login_required
 from .forms import ProfileForm
 from vehicles.models import Vehicle
+from .forms import UserForm
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -32,23 +33,25 @@ def register_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
-
 @login_required
 def profile_view(request):
-    profile = request.user.profile
-    vehicles_uploaded = Vehicle.objects.filter(usuario=request.user)
-    favoritos = request.user.vehiculos_favoritos.all()
+    user_form = UserForm(instance=request.user)
+    profile_form = ProfileForm(instance=request.user.profile)
 
     if request.method == 'POST':
-        form = ProfileForm(request.POST, instance=profile, user=request.user)
-        if form.is_valid():
-            form.save(request.user)
+        user_form = UserForm(request.POST, instance=request.user)
+        profile_form = ProfileForm(request.POST, instance=request.user.profile)
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
             return redirect('profile')
-    else:
-        form = ProfileForm(instance=profile, user=request.user)
+
+    mis_vehiculos = Vehicle.objects.filter(usuario=request.user)
+    favoritos = request.user.vehiculos_favoritos.all()
 
     return render(request, 'account/profile.html', {
-        'form': form,
-        'vehicles_uploaded': vehicles_uploaded,
-        'favoritos': favoritos
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'mis_vehiculos': mis_vehiculos,
+        'favoritos': favoritos,
     })

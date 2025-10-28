@@ -66,7 +66,16 @@ class RegisterForm(forms.ModelForm):
         return user
 
 
-
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control rounded'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control rounded'}),
+        }
+        
+        
 class ProfileForm(forms.ModelForm):
     email = forms.EmailField(label="Correo electrónico", required=True)
     username = forms.CharField(label="Nombre de usuario", required=True)
@@ -74,6 +83,11 @@ class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['telefono', 'ciudad']
+        widgets = {
+            'telefono': forms.TextInput(attrs={'class': 'form-control rounded'}),
+            'ciudad': forms.Select(attrs={'class': 'form-select rounded'}),
+        }
+
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
