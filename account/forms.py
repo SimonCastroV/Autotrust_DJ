@@ -2,6 +2,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
+from .models import Profile
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(label="Usuario", widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -64,3 +65,27 @@ class RegisterForm(forms.ModelForm):
             user.save()
         return user
 
+
+
+class ProfileForm(forms.ModelForm):
+    email = forms.EmailField(label="Correo electrónico", required=True)
+    username = forms.CharField(label="Nombre de usuario", required=True)
+
+    class Meta:
+        model = Profile
+        fields = ['telefono', 'ciudad']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['email'].initial = user.email
+            self.fields['username'].initial = user.username
+
+    def save(self, user, commit=True):
+        user.email = self.cleaned_data['email']
+        user.username = self.cleaned_data['username']
+        if commit:
+            user.save()
+            super().save(commit)
+        return user
