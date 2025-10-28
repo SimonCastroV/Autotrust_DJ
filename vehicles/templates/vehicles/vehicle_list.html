@@ -18,7 +18,7 @@
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100 vehicle-card" data-bs-toggle="modal" data-bs-target="#vehicleModal{{ vehicle.id }}">
                 
-                {# Mostrar la primera imagen del vehículo como portada #}
+                <!-- Imagen principal -->
                 {% if vehicle.imagenes.exists %}
                     <img src="{{ vehicle.imagenes.first.imagen.url }}" class="card-img-top" alt="{{ vehicle.marca }} {{ vehicle.modelo }}">
                 {% elif vehicle.imagen %}
@@ -26,12 +26,35 @@
                 {% else %}
                     <img src="https://via.placeholder.com/400x250.png?text=Sin+Imagen" class="card-img-top" alt="Sin imagen">
                 {% endif %}
-                
-                <div class="card-body">
+
+                <div class="card-body position-relative">
+                    <!-- Botón de favorito -->
+                    <form action="{% url 'toggle_favorite' vehicle.id %}" method="post" class="favorite-form">
+                        {% csrf_token %}
+                        {% if user.is_authenticated %}
+                            {% if user in vehicle.favoritos.all %}
+                                <button type="submit" class="btn btn-link p-0 favorite-btn" title="Quitar de favoritos">
+                                    <i class="bi bi-heart-fill text-danger fs-4"></i>
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-link p-0 favorite-btn" title="Agregar a favoritos">
+                                    <i class="bi bi-heart text-danger fs-4"></i>
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-link p-0 favorite-btn" title="Inicia sesión para guardar favoritos">
+                                <i class="bi bi-heart text-secondary fs-4"></i>
+                            </a>
+                        {% endif %}
+                    </form>
+
                     <h5 class="card-title text-capitalize">{{ vehicle.marca }} {{ vehicle.modelo }}</h5>
                     <p><strong>Año:</strong> {{ vehicle.anio }}</p>
                     <p class="text-danger fw-bold">${{ vehicle.precio|intcomma }}</p>
                     <p>{{ vehicle.descripcion|truncatewords:10 }}</p>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-person-circle"></i> Publicado por: {{ vehicle.usuario.username }}
+                    </p>
 
                     <div class="d-flex justify-content-between mt-3">
                         <button class="btn btn-pagar w-50 me-2">
@@ -59,7 +82,7 @@
                     <div class="modal-body bg-white">
                         <div class="row g-4">
                             <div class="col-md-7">
-                                <!-- Carrusel de imágenes -->
+                                <!-- Carrusel -->
                                 {% if vehicle.imagenes.exists %}
                                 <div id="carousel{{ vehicle.id }}" class="carousel slide" data-bs-ride="carousel">
                                     <div class="carousel-inner">
@@ -99,6 +122,9 @@
                                 <div class="text-muted small mt-3">
                                     <p class="mb-0">Publicado: {{ vehicle.fecha_publicacion|date:"d/m/Y H:i" }}</p>
                                     <p>Actualizado: {{ vehicle.updated_at|date:"d/m/Y H:i" }}</p>
+                                    <p class="text-muted small mb-2">
+                                        <i class="bi bi-person-circle"></i> Publicado por: {{ vehicle.usuario.username }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -118,4 +144,6 @@
         {% endfor %}
     </div>
 </div>
+
+
 {% endblock %}
