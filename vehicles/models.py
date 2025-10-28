@@ -1,7 +1,15 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 class Vehicle(models.Model):
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="vehiculos_publicados",
+        null=True,  # <-- lo hacemos opcional para no romper migraciones
+        blank=True
+    )
     marca = models.CharField(max_length=100)
     modelo = models.CharField(max_length=100)
     anio = models.CharField(max_length=10)
@@ -13,6 +21,7 @@ class Vehicle(models.Model):
     imagen = models.ImageField(upload_to='vehiculos/', blank=True, null=True)
     fecha_publicacion = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    favoritos = models.ManyToManyField(User, related_name='vehiculos_favoritos', blank=True)
 
     def __str__(self):
         return f"{self.marca} {self.modelo}"
@@ -23,3 +32,4 @@ class VehicleImage(models.Model):
 
     def __str__(self):
         return f"Imagen de {self.vehicle.marca} {self.vehicle.modelo}"
+

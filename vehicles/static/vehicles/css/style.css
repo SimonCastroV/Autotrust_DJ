@@ -209,3 +209,19 @@ body {
     transition: 0.3s;
 }
 
+.favorite-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.favorite-btn:hover {
+  transform: scale(1.2);
+}
+.favorite-form {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+

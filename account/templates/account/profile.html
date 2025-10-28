@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Perfil de Usuario{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-danger fw-bold mb-4">Mi Perfil</h2>
+
+  <div class="card shadow-lg border-0 mb-5">
+    <div class="card-header bg-danger text-white fw-bold">Datos Personales</div>
+    <div class="card-body">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Nombre de usuario</label>
+            {{ form.username }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Correo electrónico</label>
+            {{ form.email }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Teléfono</label>
+            {{ form.telefono }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">Ciudad</label>
+            {{ form.ciudad }}
+          </div>
+        </div>
+        <button type="submit" class="btn btn-danger">Guardar Cambios</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white fw-bold">Mis Vehículos Publicados</div>
+        <div class="card-body">
+          {% if vehicles_uploaded %}
+            <ul class="list-group">
+              {% for v in vehicles_uploaded %}
+                <li class="list-group-item">
+                  {{ v.marca }} {{ v.modelo }} - ${{ v.precio }}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No has publicado ningún vehículo.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white fw-bold">Mis Favoritos</div>
+        <div class="card-body">
+          {% if favoritos %}
+            <ul class="list-group">
+              {% for v in favoritos %}
+                <li class="list-group-item">
+                  {{ v.marca }} {{ v.modelo }} - ${{ v.precio }}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No tienes vehículos en favoritos.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@ class VehicleForm(forms.ModelForm):
         model = Vehicle
         fields = [
             'marca', 'modelo', 'anio', 'descripcion', 'precio',
-            'ubicacion', 'kilometraje', 'motor'
+            'ubicacion', 'kilometraje', 'motor','imagen'
         ]
         widgets = {
             'marca': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Toyota'}),
