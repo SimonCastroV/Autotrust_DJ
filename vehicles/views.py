@@ -1,6 +1,10 @@
 from django.shortcuts import render, redirect
 from .forms import VehicleForm
 from .models import Vehicle,VehicleImage
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 def vehicle_list(request):
     vehicles = Vehicle.objects.prefetch_related('imagenes').all()
@@ -19,3 +23,5 @@ def upload_vehicle(request):
     else:
         form = VehicleForm()
     return render(request, 'vehicles/upload_vehicle.html', {'form': form})
+
+
