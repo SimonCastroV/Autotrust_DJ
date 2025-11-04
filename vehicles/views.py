@@ -3,9 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Min, Max
 from django.core.paginator import Paginator
 from decimal import Decimal, InvalidOperation
+from django.conf import settings
 
 from .forms import VehicleForm
-from .models import Vehicle, VehicleImage
+from .models import Vehicle, VehicleImage, Venta
+
 
 
 # ---------------- utils ----------------
@@ -115,3 +117,46 @@ def toggle_favorite(request, vehicle_id):
     else:
         vehicle.favoritos.add(request.user)
     return redirect(request.META.get("HTTP_REFERER", "vehicle_list"))
+
+@login_required
+def crear_venta(request, vehicle_id):
+    """
+    Crea una venta para el vehículo y redirige al recibo.
+    Por simplicidad, se crea al instante (podrías pedir confirmación en otra vista si quieres).
+    """
+    vehicle = get_object_or_404(Vehicle, pk=vehicle_id)
+
+    # Tasa de impuesto configurable desde settings (opcional)
+    tasa = getattr(settings, "SALES_TAX", Decimal("0.19"))
+
+    venta = Venta.objects.create(
+        vehicle=vehicle,
+        comprador=request.user,
+        vendedor=vehicle.usuario,
+        # snapshot
+        marca=vehicle.marca,
+        modelo=vehicle.modelo,
+        anio=vehicle.anio,
+        ubicacion=vehicle.ubicacion,
+        kilometraje=vehicle.kilometraje,
+        motor=vehicle.motor,
+        # montos
+        precio_unitario=vehicle.precio,
+        tasa_impuesto=tasa,
+        metodo_pago="tarjeta",  # o detectar desde un form si más adelante agregas
+    )
+
+    return redirect("venta_recibo", venta_id=venta.id)
+
+
+@login_required
+def venta_recibo(request, venta_id):
+    venta = get_object_or_404(Venta, pk=venta_id)
+    # Solo comprador o staff puede ver
+    if not (request.user.is_staff or request.user == venta.comprador):
+        return redirect("vehicle_list")
+
+    context = {
+        "venta": venta,
+    }
+    return render(request, "vehicles/venta_recibo.html", context)
