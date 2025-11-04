@@ -1,3 +1,4 @@
+# vehicles/models.py
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
@@ -7,7 +8,7 @@ class Vehicle(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="vehiculos_publicados",
-        null=True,  # <-- lo hacemos opcional para no romper migraciones
+        null=True,
         blank=True
     )
     marca = models.CharField(max_length=100)
@@ -27,9 +28,8 @@ class Vehicle(models.Model):
         return f"{self.marca} {self.modelo}"
 
 class VehicleImage(models.Model):
-    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='imagenes')
+    vehicle = models.ForeignKey('Vehicle', on_delete=models.CASCADE, related_name='imagenes')  # <- string
     imagen = models.ImageField(upload_to='vehiculos/galeria/')
 
     def __str__(self):
         return f"Imagen de {self.vehicle.marca} {self.vehicle.modelo}"
-
