@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Productos Aliados{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">Productos Aliados</h1>
+
+  {% if error %}
+    <div class="alert alert-warning">{{ error }}</div>
+  {% endif %}
+
+  {% if items %}
+    <div class="row g-3">
+      {% for it in items %}
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm border-0">
+            {% if it.imagen_url %}
+              <img src="{{ it.imagen_url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ it.nombre|default:it.titulo|default:"Producto" }}</h5>
+              {% if it.precio %}
+                <p class="fw-bold text-danger mb-2">${{ it.precio|intcomma }}</p>
+              {% endif %}
+              {% if it.descripcion %}
+                <p class="text-muted small">{{ it.descripcion }}</p>
+              {% endif %}
+            </div>
+            <div class="card-footer bg-white border-0">
+              {% if it.detalle_url %}
+                <a class="btn btn-outline-primary w-100" href="{{ it.detalle_url }}" target="_blank" rel="noopener">
+                  Ver detalle
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% elif not error %}
+    <p class="text-muted">No se recibieron elementos del aliado.</p>
+  {% endif %}
+</div>
+{% endblock %}
