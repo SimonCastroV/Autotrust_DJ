@@ -5,6 +5,7 @@
 {% block title %}Autos en Venta{% endblock %}
 
 {% block content %}
+{% include "chatt/drawer.html" %}
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="text-danger fw-bold">Autos en Venta</h1>
@@ -154,7 +155,7 @@
         </div>
 
         <!-- MODAL -->
-        <div class="modal fade" id="vehicleModal{{ vehicle.id }}" tabindex="-1" aria-labelledby="vehicleModalLabel{{ vehicle.id }}" aria-hidden="true">
+        <div class="modal fade" id="vehicleModal{{ vehicle.id }}" tabindex="-1" aria-labelledby="vehicleModalLabel{{ vehicle.id }}" aria-hidden="true" data-bs-focus="false">
             <div class="modal-dialog modal-xl modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header bg-danger text-white">
@@ -223,7 +224,14 @@
                             <i class="bi bi-credit-card"></i> Pagar
                           </button>
                         </form>
-                        <button class="btn btn-chat px-4 ms-2">
+                        <button
+                          class="btn btn-chat px-4 ms-2"
+                          type="button"
+                          data-vehicle-id="{{ vehicle.id }}"
+                          data-vehicle-title="{{ vehicle.marca }} {{ vehicle.modelo }}"
+                          data-vehicle-year="{{ vehicle.anio }}"
+                          data-vehicle-price="${{ vehicle.precio|intcomma }}"
+                        >
                           <i class="bi bi-chat"></i> Chat
                         </button>
                     </div>
@@ -234,6 +242,33 @@
     </div>
 </div>
 
+<script>
+  (function(){
+    const currentUserId = {% if request.user.is_authenticated %}{{ request.user.id }}{% else %}null{% endif %};
+    const chatButtons = document.querySelectorAll('.btn-chat');
+    chatButtons.forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!window.AutotrustChat) {
+          console.warn('Chat no disponible.');
+          return;
+        }
+        const vehicleId = Number(btn.dataset.vehicleId);
+        const title = btn.dataset.vehicleTitle || '';
+        const year = btn.dataset.vehicleYear || '';
+        const price = btn.dataset.vehiclePrice || '';
+        window.AutotrustChat.open({
+          userId: currentUserId,
+          vehicleId,
+          title,
+          year,
+          price,
+        });
+      });
+    });
+  })();
+</script>
 <!-- ===================== JS SLIDER DOBLE ===================== -->
 <script>
   (function(){

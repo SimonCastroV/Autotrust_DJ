@@ -1,0 +1,267 @@
+<div id="chatt-drawer" aria-hidden="true">
+  <style>
+    :root {
+      --bg: #1F1F1F; --panel:#2D2D2D; --txt:#E5E7EB; --muted:#9CA3AF;
+      --border:#3B3B3B; --cta:#DC2626; --ok:#10B981; --warn:#F59E0B; --err:#EF4444;
+    }
+    #chatt-drawer { position: fixed; inset: 0 0 0 auto; width: 480px; max-width: 100%; transform: translateX(100%);
+      background: var(--bg); border-left: 1px solid var(--border); transition: transform .22s ease; z-index: 9999; }
+    #chatt-drawer.open { transform: translateX(0); }
+    .chatt-header { position: sticky; top:0; background: var(--bg); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; gap:12px; align-items:center; justify-content:space-between;}
+    .chatt-title { color:var(--txt); font-weight:600; font-size:14px; }
+    .chatt-sub { color:var(--muted); font-size:12px; }
+    .chatt-log { height: calc(100vh - 152px); overflow:auto; padding:12px; }
+    .chatt-bubble { display:inline-block; padding:8px 10px; border-radius:16px; margin:4px 0; max-width:72%; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+    .mine { background: var(--cta); color:white; float:right; clear:both; }
+    .peer { background: var(--panel); color:var(--txt); border:1px solid var(--border); float:left; clear:both; }
+    .chatt-time { font-size:11px; opacity:.8; margin-top:4px; }
+    .chatt-footer { border-top:1px solid var(--border); padding:12px; }
+    .chatt-row { display:flex; gap:8px; align-items:flex-end; }
+    .chatt-input { flex:1; min-height:36px; max-height:120px; resize:none; background:transparent; color:var(--txt); border:1px solid var(--border);
+      border-radius:12px; padding:8px 10px; outline:none; }
+    .chatt-btn { background:var(--cta); color:white; border:none; border-radius:12px; padding:8px 12px; font-weight:600; cursor:pointer; }
+    .chatt-banner { font-size:12px; padding:2px 8px; border-radius:999px; }
+    .ok { background:var(--ok); color:#0B0F13; } .warn{background:var(--warn);} .err{background:var(--err);}
+    .chatt-typing { display:inline-flex; gap:4px; align-items:center; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:var(--panel); color:var(--muted); }
+    .dot{ width:6px; height:6px; border-radius:999px; background:var(--muted); animation:bounce 1s infinite; }
+    .dot:nth-child(2){animation-delay:.12s;} .dot:nth-child(3){animation-delay:.24s;}
+    @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-3px)}}
+  </style>
+
+  <div class="chatt-header">
+    <div>
+      <div class="chatt-title">Chat con vendedor</div>
+      <div class="chatt-sub" id="chatt-vehicle-line"></div>
+    </div>
+    <div id="chatt-status" class="chatt-banner ok">Conectado</div>
+    <button id="chatt-close" class="chatt-btn" style="background:#444">✕</button>
+  </div>
+
+  <div id="chatt-log" class="chatt-log" role="log" aria-relevant="additions"></div>
+
+  <div id="chatt-typing" style="padding:0 12px; display:none;">
+    <div class="chatt-typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+  </div>
+
+  <div class="chatt-footer">
+    <div class="chatt-row">
+      <textarea id="chatt-input" class="chatt-input" placeholder="Escribe un mensaje…"></textarea>
+      <button id="chatt-send" class="chatt-btn">Enviar</button>
+    </div>
+    <div class="chatt-sub" style="margin-top:4px;">Enter = enviar • Shift+Enter = nueva línea</div>
+  </div>
+
+  <script>
+    (function(){
+      const drawer   = document.getElementById('chatt-drawer');
+      const log      = document.getElementById('chatt-log');
+      const input    = document.getElementById('chatt-input');
+      const sendBtn  = document.getElementById('chatt-send');
+      const closeBtn = document.getElementById('chatt-close');
+      const typingEl = document.getElementById('chatt-typing');
+      const statusEl = document.getElementById('chatt-status');
+      const vehicleLine = document.getElementById('chatt-vehicle-line');
+
+      const state = { vehicleId: null, conversationId: null };
+      let ws = null; let reconnectAttempts = 0; let typingTimer = null; let atBottom = true;
+      const pendingMessages = [];
+
+      setStatus('offline');
+
+      function setVehicleLine({title, year, price}){
+        const parts = [title, year ? `• ${year}` : null, price ? `• ${price}` : null].filter(Boolean);
+        vehicleLine.textContent = parts.join(' ');
+      }
+
+      function openDrawer(){ drawer.classList.add('open'); scrollToBottom(); }
+      function closeDrawer(){
+        drawer.classList.remove('open');
+        if (ws) ws.close();
+        ws = null;
+        state.vehicleId = null;
+        state.conversationId = null;
+        setStatus('offline');
+      }
+      closeBtn.addEventListener('click', closeDrawer);
+
+      function setStatus(kind){
+        if(kind==='online'){
+          statusEl.textContent='Conectado';
+          statusEl.className='chatt-banner ok';
+          input.removeAttribute('disabled');
+          sendBtn.removeAttribute('disabled');
+        } else if(kind==='reconnecting'){
+          statusEl.textContent='Reconectando…';
+          statusEl.className='chatt-banner warn';
+          input.removeAttribute('disabled');
+          sendBtn.removeAttribute('disabled');
+        } else {
+          statusEl.textContent='Sin conexión';
+          statusEl.className='chatt-banner err';
+          input.setAttribute('disabled', 'disabled');
+          sendBtn.setAttribute('disabled', 'disabled');
+        }
+      }
+
+      function scrollToBottom(){ log.scrollTo({top: log.scrollHeight, behavior:'smooth'}); }
+      log.addEventListener('scroll', () => {
+        atBottom = (log.scrollHeight - log.scrollTop - log.clientHeight) < 24;
+      });
+
+      function bubble({text, sender_id, created_at, mine}){
+        const wrap = document.createElement('div');
+        wrap.className = 'chatt-bubble ' + (mine ? 'mine' : 'peer');
+        wrap.innerHTML = '<div>'+ (text||'') +'</div><div class="chatt-time">'+ new Date(created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) +'</div>';
+        log.appendChild(wrap);
+        if(atBottom) scrollToBottom();
+      }
+
+      async function fetchOrCreateConversation(vehicleId){
+        const res = await fetch(`/chatt/open/${vehicleId}/`, {credentials:'same-origin'});
+        if(!res.ok){ throw new Error('No se pudo abrir conversación'); }
+        return await res.json();
+      }
+
+      async function loadHistory(conversation_id){
+        const res = await fetch(`/chatt/history/${conversation_id}/`, {credentials:'same-origin'});
+        if(!res.ok){ throw new Error('No se pudo cargar el historial.'); }
+        const data = await res.json();
+        log.innerHTML = '';
+        data.messages.forEach(m => bubble({text:m.text, sender_id:m.sender_id, created_at:m.created_at, mine: m.sender_id === window.CHATT_USER_ID}));
+        scrollToBottom();
+      }
+
+      function connectWS(conversationId){
+        if(!conversationId){ return; }
+        setStatus('reconnecting');
+        const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+        ws = new WebSocket(`${proto}://${location.host}/ws/chatt/conversation/${conversationId}/`);
+
+        ws.onopen = () => {
+          reconnectAttempts = 0;
+          setStatus('online');
+          flushPending();
+        };
+        ws.onclose = () => {
+          if(drawer.classList.contains('open')){
+            setStatus('reconnecting');
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts++), 8000);
+            setTimeout(() => connectWS(state.conversationId), delay);
+          } else { setStatus('offline'); }
+        };
+        ws.onerror = () => { setStatus('reconnecting'); };
+
+        ws.onmessage = (e) => {
+          const msg = JSON.parse(e.data);
+          if(msg.type === 'message'){
+            bubble({text: msg.text, sender_id: msg.sender_id, created_at: msg.created_at, mine: msg.sender_id === window.CHATT_USER_ID});
+          } else if(msg.type === 'typing'){
+            typingEl.style.display = msg.is_typing ? 'block' : 'none';
+            if(msg.is_typing){ setTimeout(()=> typingEl.style.display='none', 3000); }
+          } else if(msg.type === 'presence'){
+            // opcional: mostrar presencia
+          }
+        };
+      }
+
+      function isReady(){
+        return ws && ws.readyState === WebSocket.OPEN;
+      }
+
+      function flushPending(){
+        if(!isReady() || !pendingMessages.length) return;
+        while(pendingMessages.length){
+          const payload = pendingMessages.shift();
+          ws.send(JSON.stringify({type:'message', text: payload.text}));
+        }
+      }
+
+      function send(text){
+        if(!isReady()){
+          console.warn('WebSocket no disponible, mensaje en cola.');
+          pendingMessages.push({text});
+          statusEl.textContent = 'Reconectando… (mensaje en cola)';
+          statusEl.className = 'chatt-banner warn';
+          return true;
+        }
+        ws.send(JSON.stringify({type:'message', text}));
+        return true;
+      }
+
+      input.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' && !e.shiftKey){
+          e.preventDefault();
+          const t = input.value.trim();
+          if(t){
+            if(send(t)){
+              bubble({text:t, sender_id: window.CHATT_USER_ID, created_at: new Date().toISOString(), mine:true});
+              input.value='';
+            }
+          }
+        }
+      });
+      sendBtn.addEventListener('click', () => {
+        const t = input.value.trim();
+        if(t){
+          if(send(t)){
+            bubble({text:t, sender_id: window.CHATT_USER_ID, created_at: new Date().toISOString(), mine:true});
+            input.value='';
+          }
+        }
+      });
+
+      input.addEventListener('input', () => {
+        if(!isReady()) return;
+        ws.send(JSON.stringify({type:'typing', is_typing:true}));
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+          if(isReady()){
+            ws.send(JSON.stringify({type:'typing', is_typing:false}));
+          }
+        }, 800);
+      });
+
+      // API pública mínima para integrarlo con tu botón “Chat”
+      window.AutotrustChat = {
+        open: async function({userId, vehicleId=null, conversationId=null, title='', year='', price=''}){
+          if(!userId){ console.warn('Usuario no autenticado, no se puede abrir chat.'); return; }
+
+          const parsedVehicleId = vehicleId !== null && vehicleId !== undefined && vehicleId !== '' ? Number(vehicleId) : NaN;
+          const normalizedVehicleId = Number.isFinite(parsedVehicleId) ? parsedVehicleId : null;
+
+          const parsedConversationId = conversationId !== null && conversationId !== undefined && conversationId !== '' ? Number(conversationId) : NaN;
+          const normalizedConversationId = Number.isFinite(parsedConversationId) ? parsedConversationId : null;
+
+          if(normalizedVehicleId === null && normalizedConversationId === null){
+            console.warn('Parámetros insuficientes para abrir chat.');
+            return;
+          }
+          window.CHATT_USER_ID = userId;
+          state.vehicleId = normalizedVehicleId;
+          setVehicleLine({title, year, price});
+          openDrawer();
+          try{
+            if(normalizedConversationId !== null){
+              state.conversationId = normalizedConversationId;
+            } else if(normalizedVehicleId !== null){
+              const { conversation_id } = await fetchOrCreateConversation(normalizedVehicleId);
+              const parsed = Number(conversation_id);
+              if(!Number.isFinite(parsed)){
+                throw new Error('ID de conversación inválido recibido.');
+              }
+              state.conversationId = parsed;
+            } else {
+              throw new Error('No fue posible determinar la conversación.');
+            }
+            await loadHistory(state.conversationId);
+            connectWS(state.conversationId);
+          } catch (err){
+            console.error(err);
+            setStatus('offline');
+          }
+        },
+        close: closeDrawer
+      };
+    })();
+  </script>
+</div>

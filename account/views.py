@@ -4,6 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from .forms import RegisterForm, ProfileForm, UserForm
 from vehicles.models import Vehicle
+from chatt.models import Conversation
 from django.contrib import messages  
 
 
@@ -85,10 +86,16 @@ def profile_view(request):
 
     mis_vehiculos = Vehicle.objects.filter(usuario=user)
     favoritos = user.vehiculos_favoritos.all()
+    seller_conversations = (
+        Conversation.objects.filter(seller=user)
+        .select_related("vehicle", "buyer")
+        .order_by("-created_at")
+    )
 
     return render(request, 'account/profile.html', {
         'user_form': user_form,
         'profile_form': profile_form,
         'mis_vehiculos': mis_vehiculos,
         'favoritos': favoritos,
+        'seller_conversations': seller_conversations,
     })

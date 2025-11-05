@@ -41,8 +41,9 @@ INSTALLED_APPS = [
 
     # Utilidades
     'django.contrib.humanize',
+    'channels',
+    'chatt',
 ]
-
 # --- AUTH ---
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -86,6 +87,24 @@ TEMPLATES = [
     },
 ]
 
+
+ASGI_APPLICATION = 'autotrust.asgi.application'
+
+# --- CHANNELS / WEBSOCKETS ---
+_redis_url = os.getenv("REDIS_URL")
+if _redis_url:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [_redis_url]},
+        }
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        }
+    }
 # --- DATABASE ---
 DATABASES = {
     'default': {

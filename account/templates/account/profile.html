@@ -5,6 +5,7 @@
 {% block title %}Mi Perfil{% endblock %}
 
 {% block content %}
+{% include "chatt/drawer.html" %}
 <div class="container my-5">
   <h1 class="text-danger fw-bold mb-4">Mi Perfil</h1>
   {% if messages %}
@@ -148,5 +149,76 @@
     </div>
 
   </div>
+
+  <!-- ===== CONVERSACIONES COMO VENDEDOR ===== -->
+  <div class="row g-4 mt-4">
+    <div class="col-12">
+      <div class="card shadow border-0 rounded-4">
+        <div class="card-header bg-secondary text-white fw-bold rounded-top-4">
+          <i class="bi bi-chat-dots"></i> Consultas sobre mis publicaciones
+        </div>
+        <div class="card-body bg-dark-subtle rounded-bottom-4">
+          {% if seller_conversations %}
+            <div class="list-group list-group-flush">
+              {% for convo in seller_conversations %}
+                <div class="list-group-item bg-white d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 py-3">
+                  <div>
+                    <div class="fw-bold text-danger">{{ convo.vehicle.marca }} {{ convo.vehicle.modelo }}</div>
+                    <div class="text-muted small">{{ convo.vehicle.anio }} • {{ convo.vehicle.ubicacion }} • ${{ convo.vehicle.precio|intcomma }}</div>
+                    <div class="small">Comprador: <strong>{{ convo.buyer.username }}</strong></div>
+                    <div class="small text-muted">Iniciado: {{ convo.created_at|date:"d/m/Y H:i" }}</div>
+                  </div>
+                  <div class="ms-md-auto">
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger rounded-pill px-3 chatt-open-seller"
+                      data-conversation-id="{{ convo.id }}"
+                      data-vehicle-id="{{ convo.vehicle_id }}"
+                      data-vehicle-title="{{ convo.vehicle.marca }} {{ convo.vehicle.modelo }}"
+                      data-vehicle-year="{{ convo.vehicle.anio }}"
+                      data-vehicle-price="${{ convo.vehicle.precio|intcomma }}"
+                    >
+                      <i class="bi bi-chat"></i> Abrir chat
+                    </button>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">Aún no tienes chats abiertos con compradores.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const currentUserId = {% if request.user.is_authenticated %}{{ request.user.id }}{% else %}null{% endif %};
+      const sellerButtons = document.querySelectorAll('.chatt-open-seller');
+      sellerButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          if (!window.AutotrustChat) {
+            console.warn('Chat no disponible.');
+            return;
+          }
+          const conversationId = Number(btn.dataset.conversationId);
+          const vehicleId = Number(btn.dataset.vehicleId);
+          const title = btn.dataset.vehicleTitle || '';
+          const year = btn.dataset.vehicleYear || '';
+          const price = btn.dataset.vehiclePrice || '';
+          window.AutotrustChat.open({
+            userId: currentUserId,
+            conversationId,
+            vehicleId,
+            title,
+            year,
+            price,
+          });
+        });
+      });
+    })();
+  </script>
+
 </div>
 {% endblock %}
