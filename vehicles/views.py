@@ -19,6 +19,14 @@ def _to_decimal(v):
 
 
 # --------------- views -----------------
+def landing_page(request):
+    return render(request, "home.html")
+
+
+def why_autotrust(request):
+    return render(request, "porque.html")
+
+
 def vehicle_list(request):
     """
     Listado con filtros por marca, modelo y rango de precio.
@@ -102,7 +110,7 @@ def upload_vehicle(request):
             for f in files:
                 VehicleImage.objects.create(vehicle=vehicle, imagen=f)
 
-            return redirect("vehicle_list")
+            return redirect("catalogo")
     else:
         form = VehicleForm()
 
@@ -116,7 +124,7 @@ def toggle_favorite(request, vehicle_id):
         vehicle.favoritos.remove(request.user)
     else:
         vehicle.favoritos.add(request.user)
-    return redirect(request.META.get("HTTP_REFERER", "vehicle_list"))
+    return redirect(request.META.get("HTTP_REFERER", "catalogo"))
 
 @login_required
 def crear_venta(request, vehicle_id):
@@ -154,7 +162,7 @@ def venta_recibo(request, venta_id):
     venta = get_object_or_404(Venta, pk=venta_id)
     # Solo comprador o staff puede ver
     if not (request.user.is_staff or request.user == venta.comprador):
-        return redirect("vehicle_list")
+        return redirect("catalogo")
 
     context = {
         "venta": venta,

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path("", include("account.urls")),   # si usas auth propia
+    path("", include("vehicles.urls")),  # landing + catálogo
     path("admin/", admin.site.urls),
-    path("", include("vehicles.urls")),  # expone /, /vehicles/, /subir/, /favorito/...
+    path("", include("account.urls")),   # login, registro, perfil
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
