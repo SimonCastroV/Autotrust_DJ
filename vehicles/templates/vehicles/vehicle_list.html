@@ -6,12 +6,91 @@
 
 {% block content %}
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="text-danger fw-bold">Autos en Venta</h1>
         <a href="{% url 'upload_vehicle' %}" class="btn btn-danger fw-bold">
             <i class="bi bi-plus-circle"></i> Agregar Carro
         </a>
     </div>
+
+    <!-- ===================== BARRA DE BÚSQUEDA / FILTROS ===================== -->
+    <form id="filtros" method="get" class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+
+          <!-- Marca -->
+          <div class="col-12 col-md-3">
+            <label class="form-label fw-semibold">Marca</label>
+            <select name="marca" class="form-select">
+              <option value="">Todas</option>
+              {% for m in marcas %}
+                <option value="{{ m }}" {% if selected.marca == m %}selected{% endif %}>{{ m }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Modelo -->
+          <div class="col-12 col-md-3">
+            <label class="form-label fw-semibold">Modelo</label>
+            <input type="text" name="modelo" value="{{ selected.modelo }}" class="form-control" placeholder="Corolla, CX-5, ...">
+          </div>
+
+          <!-- Precio mínimo -->
+          <div class="col-6 col-md-2">
+            <label class="form-label fw-semibold">Mín</label>
+            <input type="number" name="min_precio" class="form-control"
+                   min="{{ min_precio_lim }}" max="{{ max_precio_lim }}" step="50000"
+                   value="{{ selected.min_precio }}">
+          </div>
+
+          <!-- Precio máximo -->
+          <div class="col-6 col-md-2">
+            <label class="form-label fw-semibold">Máx</label>
+            <input type="number" name="max_precio" class="form-control"
+                   min="{{ min_precio_lim }}" max="{{ max_precio_lim }}" step="50000"
+                   value="{{ selected.max_precio }}">
+          </div>
+
+          <!-- Botón -->
+          <div class="col-12 col-md-2 d-grid">
+            <button class="btn btn-dark">
+              <i class="bi bi-search"></i> Buscar
+            </button>
+          </div>
+        </div>
+
+        <!-- Slider doble (sin librerías externas) -->
+        <div class="mt-3">
+          <div class="d-flex justify-content-between">
+            <small class="text-muted">Precio (slider)</small>
+            <small class="text-muted">Entre $<span id="minLbl"></span> y $<span id="maxLbl"></span></small>
+          </div>
+
+          <div class="position-relative mt-1" style="height: 38px;">
+            <!-- pista -->
+            <div class="position-absolute top-50 start-0 end-0 translate-middle-y"
+                 style="height:4px;background:#e5e7eb;border-radius:4px;"></div>
+            <!-- rango seleccionado -->
+            <div id="range-hi" class="position-absolute top-50 translate-middle-y"
+                 style="height:4px;background:#212529;border-radius:4px;left:0;right:0;"></div>
+
+            <!-- slider min -->
+            <input id="rmin" type="range"
+                   class="position-absolute w-100"
+                   style="appearance:none;background:transparent;height:38px;"
+                   min="{{ min_precio_lim }}" max="{{ max_precio_lim }}" step="50000"
+                   value="{{ selected.min_precio }}">
+            <!-- slider max -->
+            <input id="rmax" type="range"
+                   class="position-absolute w-100"
+                   style="appearance:none;background:transparent;height:38px;"
+                   min="{{ min_precio_lim }}" max="{{ max_precio_lim }}" step="50000"
+                   value="{{ selected.max_precio }}">
+          </div>
+        </div>
+      </div>
+    </form>
+    <!-- ===================================================================== -->
 
     <div class="row g-4">
         {% for vehicle in vehicles %}
@@ -56,12 +135,18 @@
                         <i class="bi bi-person-circle"></i> Publicado por: {{ vehicle.usuario.username }}
                     </p>
 
+                    <!-- Botones card -->
                     <div class="d-flex justify-content-between mt-3">
-                        <button class="btn btn-pagar w-50 me-2">
+                        <!-- PAGAR (POST) -->
+                        <form action="{% url 'crear_venta' vehicle.id %}" method="post" class="w-50 me-2">
+                          {% csrf_token %}
+                          <button class="btn btn-danger w-100">
                             <i class="bi bi-credit-card"></i> Pagar
-                        </button>
+                          </button>
+                        </form>
+                        <!-- CHAT (placeholder) -->
                         <button class="btn btn-chat w-50">
-                            <i class="bi bi-chat"></i> Chat
+                          <i class="bi bi-chat"></i> Chat
                         </button>
                     </div>
                 </div>
@@ -131,11 +216,15 @@
                     </div>
 
                     <div class="modal-footer bg-light d-flex justify-content-end">
-                        <button class="btn btn-danger px-4">
+                        <!-- PAGAR en modal (POST) -->
+                        <form action="{% url 'crear_venta' vehicle.id %}" method="post" class="me-2">
+                          {% csrf_token %}
+                          <button class="btn btn-danger px-4">
                             <i class="bi bi-credit-card"></i> Pagar
-                        </button>
+                          </button>
+                        </form>
                         <button class="btn btn-chat px-4 ms-2">
-                            <i class="bi bi-chat"></i> Chat
+                          <i class="bi bi-chat"></i> Chat
                         </button>
                     </div>
                 </div>
@@ -145,5 +234,43 @@
     </div>
 </div>
 
+<!-- ===================== JS SLIDER DOBLE ===================== -->
+<script>
+  (function(){
+    const form = document.getElementById('filtros');
+    const minField = form.querySelector('input[name="min_precio"]');
+    const maxField = form.querySelector('input[name="max_precio"]');
+    const rmin = document.getElementById('rmin');
+    const rmax = document.getElementById('rmax');
+    const hi = document.getElementById('range-hi');
+    const minLbl = document.getElementById('minLbl');
+    const maxLbl = document.getElementById('maxLbl');
+    const MIN = Number(rmin.min), MAX = Number(rmin.max);
 
+    function clampPair(a,b){ a=Number(a); b=Number(b); return a<=b?[a,b]:[b,a]; }
+    function updateVisual(){
+      const pair = clampPair(rmin.value, rmax.value);
+      rmin.value = pair[0]; rmax.value = pair[1];
+      const left  = ((pair[0]-MIN)/(MAX-MIN))*100;
+      const right = 100 - ((pair[1]-MIN)/(MAX-MIN))*100;
+      hi.style.left  = left + '%';
+      hi.style.right = right + '%';
+      minLbl.textContent = Number(pair[0]).toLocaleString();
+      maxLbl.textContent = Number(pair[1]).toLocaleString();
+      minField.value = pair[0];
+      maxField.value = pair[1];
+    }
+
+    rmin.addEventListener('input', updateVisual);
+    rmax.addEventListener('input', updateVisual);
+    rmin.addEventListener('change', () => form.submit());
+    rmax.addEventListener('change', () => form.submit());
+    // Enviar al cambiar marca/modelo; si prefieres solo con el botón, comenta esto:
+    for (const el of form.querySelectorAll('select, input[type="text"]')) {
+      el.addEventListener('change', () => form.submit());
+    }
+    updateVisual();
+  })();
+</script>
+<!-- =========================================================== -->
 {% endblock %}

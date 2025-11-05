@@ -1,9 +1,46 @@
-# .gitignore
+# ── Python / Django ──────────────────────────────────────────
 __pycache__/
-*.pyc
-.ipynb_checkpoints/
-.env
-*.log
-*.DS_Store
-.vscode/
+*.py[cod]
+*.pyo
+*.pyd
 *.egg-info/
+*.egg
+*.log
+
+# DB local (ajusta si usas otro nombre)
+*.sqlite3
+
+# Entornos virtuales
+.venv/
+venv/
+
+# Archivos de entorno / secretos
+.env
+.env.*
+*.env
+
+# Media/Static generados en runtime
+media/
+staticfiles/
+# (si generas STATIC_ROOT en collectstatic, ignóralo aquí)
+# static/
+
+# Cobertura / pruebas
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ── IDE / OS ─────────────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# ── Jupyter / Notebooks ─────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Otros comunes ───────────────────────────────────────────
+*.bak
+*.swp
+*.swo
