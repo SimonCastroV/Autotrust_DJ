@@ -61,13 +61,18 @@ Abre en tu navegador 👉 **http://127.0.0.1:8000/**
 ---
 
 ## 🧰 Variables de entorno
-Crea un archivo `.env` en la raíz del proyecto con tus configuraciones (si no existe aún).  
+Crea un archivo `.env` en la raíz del proyecto (o usa variables de entorno) con las claves que correspondan a tu despliegue.  
 Ejemplo:
 ```env
-DEBUG=True
-SECRET_KEY=tu_clave_secreta
-ALLOWED_HOSTS=127.0.0.1,localhost
+DJANGO_DEBUG=True
+DJANGO_SECRET_KEY=<REEMPLAZA_CON_CLAVE_SEGURA>
+DJANGO_ALLOWED_HOSTS=<HOST_1>,<HOST_2>
+DJANGO_CSRF_TRUSTED_ORIGINS=<ORIGEN_HTTPS_1>,<ORIGEN_HTTPS_2>
+DATABASE_URL=sqlite:////app/data/db.sqlite3  # Opcional: apunta a un archivo dentro de un volumen
+REDIS_URL=<URL_REDIS_OPCIONAL>
+DJANGO_STATIC_ROOT=/app/staticfiles
 ```
+> Reemplaza los placeholders con tus propios valores. Si mantienes SQLite sin `DATABASE_URL`, la base de datos se creará en `/app/db.sqlite3` dentro del contenedor.
 
 ---
 ## Link para Formato JSON proveedor del Servicio
@@ -80,6 +85,54 @@ http://127.0.0.1:8000/api/vehicles/
 
 ## 🐋 Docker
 
+### 1️⃣ Construir la imagen
+```bash
+docker build -t autotrust:latest .
+```
+
+### 2️⃣ Preparar variables
+Guarda tus variables en un archivo (por ejemplo `docker.env`) para reutilizarlas:
+```env
+DJANGO_DEBUG=False
+DJANGO_SECRET_KEY=<REEMPLAZA_CON_CLAVE_SEGURA>
+DJANGO_ALLOWED_HOSTS=<HOST_PRODUCCION>
+DJANGO_CSRF_TRUSTED_ORIGINS=<ORIGEN_HTTPS_1>,<ORIGEN_HTTPS_2>
+DATABASE_URL=sqlite:////app/data/db.sqlite3
+```
+> El path anterior asume que montas un volumen en `/app/data` para persistir la base de datos SQLite.
+
+### 3️⃣ Crear un volumen (opcional pero recomendado para SQLite)
+```bash
+docker volume create autotrust_data
+```
+
+### 4️⃣ Ejecutar migraciones dentro de un contenedor efímero
+```bash
+docker run --rm \
+  --env-file docker.env \
+  -v autotrust_data:/app/data \
+  autotrust:latest \
+  python manage.py migrate
+```
+
+### 5️⃣ Levantar el contenedor en modo servicio
+```bash
+docker run -d \
+  --name autotrust \
+  --env-file docker.env \
+  -v autotrust_data:/app/data \
+  -p 8080:8080 \
+  autotrust:latest
+```
+
+### 6️⃣ Verificar
+```bash
+docker logs -f autotrust
+# y en otra terminal
+curl http://localhost:8080/ --head
+```
+
+El contenedor expone Gunicorn en el puerto 8080 usando `autotrust.asgi:application` con trabajadores Uvicorn, e incluye archivos estáticos generados por `collectstatic` durante el build.
 
 ---
 

@@ -2,15 +2,30 @@ from pathlib import Path
 import os
 from decimal import Decimal
 
+import dj_database_url
 from django.contrib.messages import constants as messages
 
 # --- BASE DIR ---
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- SECURITY ---
-SECRET_KEY = 'django-insecure-=$qd#&3a#k41%jdc53=&=yo((u-)^k=fx=--69ffkev+es#nz('
-DEBUG = True
-ALLOWED_HOSTS = []
+_env_truthy_values = {"1", "true", "yes", "on"}
+
+
+def _env_list(setting_name):
+    """
+    Parse comma-separated environment variables into a clean list.
+    """
+    return [item.strip() for item in os.getenv(setting_name, "").split(",") if item.strip()]
+
+
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    'django-insecure-=$qd#&3a#k41%jdc53=&=yo((u-)^k=fx=--69ffkev+es#nz(',
+)
+DEBUG = os.getenv("DJANGO_DEBUG", "True").strip().lower() in _env_truthy_values
+ALLOWED_HOSTS = _env_list("DJANGO_ALLOWED_HOSTS")
+CSRF_TRUSTED_ORIGINS = _env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 # --- LANGUAGE / TIME ---
 LANGUAGE_CODE = 'es-co'
@@ -60,6 +75,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -106,12 +122,21 @@ else:
         }
     }
 # --- DATABASE ---
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+_database_url = os.getenv("DATABASE_URL")
+if _database_url:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            _database_url,
+            conn_max_age=int(os.getenv("DJANGO_DB_CONN_MAX_AGE", "60")),
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # --- PASSWORD VALIDATION ---
 AUTH_PASSWORD_VALIDATORS = [
@@ -124,6 +149,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # --- STATIC & MEDIA ---
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']  # Crea la carpeta si no existe para evitar el warning
+STATIC_ROOT = Path(os.getenv("DJANGO_STATIC_ROOT") or (BASE_DIR / 'staticfiles'))
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
