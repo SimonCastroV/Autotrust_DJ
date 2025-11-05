@@ -70,6 +70,13 @@ ALLOWED_HOSTS=127.0.0.1,localhost
 ```
 
 ---
+## Link para Formato JSON proveedor del Servicio
+
+```bash
+http://127.0.0.1:8000/api/vehicles/
+```
+
+---
 
 ## 🐋 Docker
 

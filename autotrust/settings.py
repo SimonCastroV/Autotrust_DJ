@@ -1,5 +1,7 @@
+# autotrust/settings.py
 from pathlib import Path
 import os
+from decimal import Decimal  # ← para SALES_TAX
 
 # --- BASE DIR ---
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,7 +18,6 @@ USE_I18N = True
 USE_TZ = True
 
 from django.contrib.messages import constants as messages
-
 MESSAGE_TAGS = {
     messages.DEBUG: 'secondary',
     messages.INFO: 'info',
@@ -24,6 +25,7 @@ MESSAGE_TAGS = {
     messages.WARNING: 'warning',
     messages.ERROR: 'danger',
 }
+
 # --- INSTALLED APPS ---
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -32,8 +34,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Apps del proyecto
     'vehicles',
     'account',
+
+    # Utilidades
     'django.contrib.humanize',
 ]
 
@@ -41,7 +47,6 @@ INSTALLED_APPS = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
-
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 LOGIN_URL = '/login/'
@@ -66,7 +71,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates',  # 👈 Carpeta general
+            BASE_DIR / 'templates',  # Carpeta general de templates
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -98,10 +103,20 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # --- STATIC & MEDIA ---
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'static']  # crea la carpeta si no existe para evitar el warning
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# --- VARIABLES DEL PROYECTO ---
+# Impuesto por defecto para el cálculo de ventas/recibos
+SALES_TAX = Decimal("0.19")  # 19%
+
+# URL del servicio aliado a consumir en /vehicles/aliados/
+# Cambia esta URL por la del equipo aliado cuando la tengas:
+PARTNER_PRODUCTS_URL = "https://equipo2.ejemplo/api/productos/"
+# Ejemplo local alternativo:
+# PARTNER_PRODUCTS_URL = "http://127.0.0.1:8001/api/aliados/"
 
 # --- DEFAULT PK FIELD ---
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
