@@ -11,19 +11,25 @@ from django.contrib import messages
 # LOGIN
 # ------------------------------
 def login_view(request):
+    next_url = request.GET.get("next") or request.POST.get("next")
+
     if request.user.is_authenticated:
-        return redirect('vehicle_list')
+        return redirect(next_url or 'catalogo')
 
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return redirect('vehicle_list')
+            return redirect(next_url or 'catalogo')
     else:
         form = AuthenticationForm()
 
-    return render(request, 'account/login.html', {'form': form})
+    context = {
+        'form': form,
+        'next': next_url,
+    }
+    return render(request, 'account/login.html', context)
 
 
 # ------------------------------

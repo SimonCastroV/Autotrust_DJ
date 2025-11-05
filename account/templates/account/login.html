@@ -7,6 +7,9 @@
     <h2>Iniciar Sesión</h2>
     <form method="post">
       {% csrf_token %}
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
       <label for="id_username">Nombre de usuario</label>
       {{ form.username }}
       <label for="id_password">Contraseña</label>

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Por qué Autotrust - Confianza en cada kilometro{% endblock %}
+{% block title %}Por qué Autotrust - Confianza en cada kilómetro{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -24,21 +24,23 @@
         font-size: 56px;
         line-height: 1.1;
         margin-bottom: 24px;
+        color: #181818;
     }
 
     .why-hero p {
         font-size: 18px;
-        color: #b0b0b0;
+        color: #555;
         line-height: 1.7;
     }
 
     .why-hero-card {
-        background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(0, 0, 0, 0.4));
-        border: 1px solid rgba(231, 76, 60, 0.4);
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(0, 0, 0, 0.05));
+        border: 1px solid rgba(231, 76, 60, 0.25);
         border-radius: 28px;
         padding: 40px;
         display: grid;
         gap: 16px;
+        color: #222;
     }
 
     .why-metrics {
@@ -48,10 +50,12 @@
     }
 
     .why-metric {
-        background: #0a0a0a;
+        background: #ffffff;
         border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(0, 0, 0, 0.08);
         padding: 26px;
+        color: #222;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
     }
 
     .why-metric h3 {
@@ -62,7 +66,7 @@
 
     .why-metric p {
         margin: 0;
-        color: #c0c0c0;
+        color: #666;
         line-height: 1.6;
     }
 
@@ -73,10 +77,12 @@
     }
 
     .why-point {
-        background: #080808;
+        background: #ffffff;
         border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.08);
         padding: 28px;
+        color: #222;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);
     }
 
     .why-point h4 {
@@ -85,10 +91,11 @@
         gap: 16px;
         font-size: 20px;
         margin-bottom: 16px;
+        color: #111;
     }
 
     .why-point p {
-        color: #b8b8b8;
+        color: #555;
         line-height: 1.6;
     }
 
@@ -97,11 +104,13 @@
         justify-content: space-between;
         align-items: center;
         gap: 30px;
-        background: #101010;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
         border-radius: 24px;
         padding: 40px 50px;
         flex-wrap: wrap;
+        color: #222;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
     }
 
     .why-cta h3 {
@@ -111,7 +120,7 @@
 
     .why-cta p {
         margin: 8px 0 0;
-        color: #c3c3c3;
+        color: #666;
     }
 
     .why-cta-actions {
@@ -218,7 +227,7 @@
         <div class="why-point">
             <h4><i class="bi bi-cpu text-danger"></i> Tecnología al servicio del auto</h4>
             <p>
-                Escanea cada vehículo en 3D, reserva pruebas de manejo en línea y sigue el estado de
+                Escanea cada vehículo en alta definición, reserva pruebas de manejo en línea y sigue el estado de
                 tu operación desde cualquier dispositivo.
             </p>
         </div>
@@ -231,7 +240,7 @@
         </div>
         <div class="why-cta-actions">
             <a href="{% url 'catalogo' %}" class="btn btn-primary">Ver catálogo</a>
-            <a href="{% url 'upload_vehicle' %}" class="btn btn-secondary">Publicar mi carro</a>
+            <a href="{% url 'upload_vehicle' %}" class="btn btn-secondary text-white">Publicar mi carro</a>
         </div>
     </div>
 </section>
